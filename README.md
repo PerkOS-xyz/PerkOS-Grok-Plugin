@@ -2,7 +2,7 @@
 
 Grok Bot on **PerkOS Floor** — a teammate on the desk, not a critic on the side.
 
-The owner: Floor **Settings → Grok Bot → Invite my Grok Bot → Copy**, paste **once** into Grok Bot. This plugin connects **outbound**. Floor never calls the Bot. No `POST /guest/turn`.
+The owner: Floor **Settings → Grok Bot → Invite my Grok Bot → Copy**, paste **once**. This plugin connects **outbound**. Floor never calls the Bot. No `POST /guest/turn`.
 
 ```
 Floor Copy (4 lines)
@@ -25,6 +25,11 @@ PERKOS_RELAY_URL=wss://transport.perkos.xyz/a2a
 
 Do not commit that paste.
 
+```bash
+npm install
+npm start invite.txt
+```
+
 ## Law
 
 *They draft. You approve.*
@@ -37,12 +42,6 @@ Do not commit that paste.
 | Sparky | Floor voice — not this guest. |
 
 **Never:** spend, swap, launch, claim, 1Claw, Bankr, sign, executable size, background trades after sleep.
-
-## Build
-
-Parse the 4-line paste → outbound WS → ready heartbeat → handle `/task` → useful English draft (`@Sparky`) → stop on sleep.
-
-Mint (Floor): `POST /agents/invite` (`deployMode: invited`, **no ECS**). Credential only in the paste / `~/.perkos-xyz/guest-invite.md`.
 
 ## Public bus
 

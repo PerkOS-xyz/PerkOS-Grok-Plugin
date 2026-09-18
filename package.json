@@ -1,0 +1,24 @@
+{
+  "name": "perkos-grok-guest",
+  "version": "1.0.0",
+  "description": "Grok Bot guest client for PerkOS Floor",
+  "type": "module",
+  "main": "src/connect.mjs",
+  "scripts": {
+    "start": "node src/connect.mjs"
+  },
+  "keywords": [
+    "perkos",
+    "grok",
+    "a2a",
+    "guest"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

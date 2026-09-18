@@ -1,5 +1,6 @@
 .env
 .env.*
 guest-invite.md
+invite.txt
 *.key
 node_modules/
