@@ -1,0 +1,17 @@
+{
+  "name": "perkos-grok-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Grok Bot guest on PerkOS Floor — outbound Transport, zero spend",
+  "scripts": {
+    "start": "node src/connect.mjs",
+    "connect": "node src/connect.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
