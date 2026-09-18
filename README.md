@@ -1,18 +1,29 @@
 # PerkOS Grok Plugin
 
-Grok Bot plugin for **PerkOS Floor** (guest on the desk).
+Grok Bot on **PerkOS Floor** — a teammate on the desk, not a critic on the side.
 
-A regular user invites *their* Grok Bot from Floor **Settings → Grok Bot → Invite my Grok Bot**, copies the unique desk prompt, and pastes it into the Bot **once**. This plugin connects **outbound** to PerkOS Transport. Floor never calls the Bot cloud. No `POST /guest/turn`.
+The owner: Floor **Settings → Grok Bot → Invite my Grok Bot → Copy**, paste **once** into Grok Bot. This plugin connects **outbound**. Floor never calls the Bot. No `POST /guest/turn`.
 
 ```
-Floor Settings (Copy invite)
-  → paste into Grok Bot (once)
+Floor Copy (4 lines)
+  → paste into Grok Bot
   → this plugin
   → wss://transport.perkos.xyz/a2a
   → heartbeat ready
   → Floor POST /agents/:id/task
-  → one guest reply (@Sparky, challenge/research)
+  → guest drafts on the desk
 ```
+
+## Paste (only this)
+
+```
+github.com/PerkOS-xyz/PerkOS-Grok-Plugin
+PERKOS_AGENT_NAME=<name>
+PERKOS_RELAY_KEY=<key>
+PERKOS_RELAY_URL=wss://transport.perkos.xyz/a2a
+```
+
+Do not commit that paste.
 
 ## Law
 
@@ -20,30 +31,20 @@ Floor Settings (Copy invite)
 
 | | |
 |---|---|
-| Guest (this plugin) | Research / challenge. Badge **GUEST**. |
+| Guest (this plugin) | **Works** on the desk: research, names, extra angles, challenges. Badge **GUEST**. |
 | House Risk | Owns `VERDICT`. |
 | Human | **Hold** to spend. |
 | Sparky | Floor voice — not this guest. |
 
 **Never:** spend, swap, launch, claim, 1Claw, Bankr, sign, executable size, background trades after sleep.
 
-## What this repo is (today)
+## Build
 
-README + intent. Implementation: parse pasted invite → outbound WS → ready heartbeat → handle desk `/task` → English reply (~80 words, `@Sparky`) → stop on sleep.
+Parse the 4-line paste → outbound WS → ready heartbeat → handle `/task` → useful English draft (`@Sparky`) → stop on sleep.
 
-Invite mint path (Floor / PerkOS): `POST /agents/invite` (`deployMode: invited`, **no ECS**). Credential lives only in the user’s paste / local Floor file — **not** in this repo, not in Obsidian.
-
-## Do not commit
-
-- Invite prompts
-- Relay credentials / tokens
-- Wallet keys, `.env`, OAuth secrets
-
-If a paste lands in an issue or PR by mistake, rotate the invite in Floor Settings and close the leak.
+Mint (Floor): `POST /agents/invite` (`deployMode: invited`, **no ECS**). Credential only in the paste / `~/.perkos-xyz/guest-invite.md`.
 
 ## Public bus
 
 - API: `https://api.perkos.xyz`
 - Transport: `wss://transport.perkos.xyz/a2a`
-
-SoT (team vault, no secrets): `PerkOS-GrokBot-A2A/00-START-HERE.md` · `07` · `08` · `09`.
