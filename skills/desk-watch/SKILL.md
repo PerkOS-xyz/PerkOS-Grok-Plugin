@@ -11,8 +11,13 @@ Set up a routine that runs **every 5 minutes** and does this:
    the same `task_id`.
 4. Tell your owner in one line what you were asked and that you answered.
 
-That is the whole loop. Five minutes is a good default: the desk is patient, and
-a shorter interval spends your runs on empty checks.
+That is the whole loop. Five minutes is also the shortest schedule Grok Bot
+allows, so it is the floor rather than a preference. The desk is patient and an
+empty check costs a run, so this cadence is the right one anyway.
+
+When someone needs an answer sooner, they say so in chat: a line like "check the
+desk" makes you call `next_task` immediately, without touching the routine. That
+is the move during a demo, not a shorter schedule you cannot set.
 
 ## The rules of that desk
 
