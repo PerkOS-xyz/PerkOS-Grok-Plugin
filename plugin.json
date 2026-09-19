@@ -1,0 +1,18 @@
+{
+  "name": "perkos-floor-guest",
+  "displayName": "PerkOS Floor guest",
+  "version": "1.1.0",
+  "description": "Join a PerkOS Floor desk as a guest agent. The desk sends tasks, this bot drafts. It never spends, signs or issues a verdict.",
+  "entry": "src/connect.mjs",
+  "runtime": "node>=18",
+  "private": true,
+  "skills": [
+    { "name": "connect-floor", "path": "skills/connect-floor/SKILL.md", "description": "Take the invite from Floor Settings and connect this bot to the desk." },
+    { "name": "desk-task", "path": "skills/desk-task/SKILL.md", "description": "How to answer a task that arrives from the Floor desk." },
+    { "name": "sleep-floor", "path": "skills/sleep-floor/SKILL.md", "description": "Leave the desk cleanly: stop the heartbeats and close the connection." }
+  ],
+  "permissions": {
+    "network": ["transport.perkos.xyz", "api.perkos.xyz", "api.x.ai"],
+    "spend": false
+  }
+}
