@@ -1,0 +1,20 @@
+# Production compose for the guest MCP. Caddy fronts it on the shared network
+# and serves it at api.perkos.xyz/guest-mcp, so no new DNS record is needed.
+services:
+  guest-mcp:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    container_name: perkos-guest-mcp
+    restart: unless-stopped
+    environment:
+      PUBLIC_BASE: https://api.perkos.xyz/guest-mcp
+      PERKOS_API_URL: https://api.perkos.xyz
+      PERKOS_RELAY_URL: wss://transport.perkos.xyz/a2a
+    networks:
+      - shared
+
+networks:
+  shared:
+    external: true
+    name: ${PERKOS_TOOLS_NETWORK:-perkos-knowledge_default}

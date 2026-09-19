@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "perkos": {
+      "type": "http",
+      "url": "https://api.perkos.xyz/guest-mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PERKOS_RELAY_KEY}",
+        "x-perkos-agent-name": "${PERKOS_AGENT_NAME}",
+        "x-perkos-agent-id": "${PERKOS_AGENT_ID}"
+      }
+    }
+  }
+}
