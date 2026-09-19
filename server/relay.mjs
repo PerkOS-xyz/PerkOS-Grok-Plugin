@@ -294,6 +294,17 @@ export class LinkRegistry {
     return link;
   }
 
+  /** Que siluetas ya ocupan otros invitados, para no repetir. */
+  stylesInUse(exceptAgent) {
+    const out = [];
+    for (const [name, link] of this.links) {
+      if (name === exceptAgent) continue;
+      const st = link.identity?.style;
+      if (st && !out.includes(st)) out.push(st);
+    }
+    return out;
+  }
+
   evictIdle() {
     const now = Date.now();
     for (const [name, link] of this.links) {
