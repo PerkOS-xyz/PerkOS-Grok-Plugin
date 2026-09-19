@@ -160,6 +160,16 @@ export class AgentLink {
     this.ws.on("error", (err) => warn(`${this.agentName}: socket error ${err.message}`));
   }
 
+  /** Trabajo que no viene de la mesa: lo pide la persona desde Settings para
+   *  que el bot se presente. Se responde aqui mismo, no al relay. */
+  nudge(text) {
+    const id = `sync_${randomUUID()}`;
+    this.queue.push({ id, from: "__local__", text, receivedMs: Date.now(), local: true });
+    while (this.queue.length > QUEUE_MAX) this.queue.shift();
+    log(`${this.agentName}: sync asked (${this.queue.length} waiting)`);
+    return id;
+  }
+
   enqueue(msg) {
     const text = promptFrom(msg.payload);
     if (!text) return;
@@ -192,6 +202,13 @@ export class AgentLink {
     if (this.answered.has(taskId)) return { ok: false, detail: "that task was already answered" };
     if (this.ws?.readyState !== WebSocket.OPEN) return { ok: false, detail: "not connected to the relay right now, try again in a minute" };
     const to = targetHint || this.pending?.from;
+    if (to === "__local__") {
+      // Era una petición de la persona, no de la mesa: no hay a quien devolverla.
+      this.answered.set(taskId, Date.now());
+      this.drafts.unshift({ taskId, text, askedAt: this.pending?.receivedMs ?? null, answeredAt: Date.now(), late: false, local: true });
+      this.drafts = this.drafts.slice(0, DRAFT_KEEP);
+      return { ok: true };
+    }
     if (!to) return { ok: false, detail: "unknown task, ask for the next task first" };
     this.ws.send(JSON.stringify({
       type: "task_response",

@@ -193,6 +193,7 @@ const httpServer = http.createServer(async (req, res) => {
         auth: "bearer",
         tools: ["desk_status", "next_task", "submit_draft", "set_identity"],
         readback: `${PUBLIC_BASE}/drafts`,
+        nudge: `${PUBLIC_BASE}/nudge`,
         identity: `${PUBLIC_BASE}/identity`
       });
     }
@@ -220,6 +221,23 @@ const httpServer = http.createServer(async (req, res) => {
         identity: link ? link.identity : null,
         status: link ? link.status() : { agent: who.agentName, connected: false, readyOnDesk: false, waiting: 0 }
       });
+    }
+
+    // La persona pide desde Settings que el invitado se actualice. No lo
+    // despierta: deja el encargo para su proxima consulta, que es como se le
+    // llega a un bot que solo tira.
+    if (req.method === "POST" && path === "/nudge") {
+      const who = identity(req);
+      if (!who.ok) return unauthorized(res, who.reason);
+      const link = registry.peek(who.agentName);
+      if (!link) return json(res, 409, { ok: false, reason: "no live seat: the bot has not connected yet" });
+      const id = link.nudge([
+        "The owner of this desk asked you to introduce yourself properly.",
+        "Call set_identity with the name you use in your own system, a colour as #rrggbb, and a shape from blob, pebble, drop or chip.",
+        "Pick a colour and a shape no other guest at this desk is using.",
+        "Then answer this task with one short line saying who you are."
+      ].join("\n"));
+      return json(res, 200, { ok: true, taskId: id, pending: link.status().waiting });
     }
 
     if (req.method === "GET" && path === "/drafts") {
