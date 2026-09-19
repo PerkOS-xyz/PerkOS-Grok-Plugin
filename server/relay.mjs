@@ -24,6 +24,7 @@ const BACKOFF_MAX_MS = 30_000;
 const QUEUE_MAX = 20;
 const TASK_TTL_MS = 60 * 60_000;     // an hour old is stale; the desk moved on
 const IDLE_EVICT_MS = Number(process.env.PERKOS_IDLE_EVICT_MS || 15 * 60_000); // three missed pulls and the seat goes
+const DRAFT_KEEP = 20;               // recent drafts kept for the app to read back
 
 const log = (...a) => console.log("[perkos-guest-mcp]", ...a);
 const warn = (...a) => console.warn("[perkos-guest-mcp]", ...a);
@@ -51,6 +52,7 @@ export class AgentLink {
     this.registered = false;
     this.ready = null;          // last platform heartbeat outcome
     this.queue = [];            // tasks waiting for the bot
+    this.drafts = [];           // what the bot answered, so Floor can read it back
     this.answered = new Map();  // taskId -> when, so a late double submit is caught
     this.backoff = BACKOFF_MIN_MS;
     this.closed = false;
@@ -197,6 +199,11 @@ export class AgentLink {
       timestamp: new Date().toISOString()
     }));
     this.answered.set(taskId, Date.now());
+    // The desk only waits about forty seconds for a live reply, and a bot on a
+    // five minute routine answers long after that, so the draft is kept here
+    // too. Floor reads it back and shows it as what it is: a late addition.
+    this.drafts.unshift({ taskId, text, askedAt: this.pending?.receivedMs ?? null, answeredAt: Date.now(), late: Date.now() - (this.pending?.receivedMs ?? Date.now()) > 40_000 });
+    this.drafts = this.drafts.slice(0, DRAFT_KEEP);
     log(`${this.agentName}: draft sent for ${String(taskId).slice(0, 8)}`);
     return { ok: true };
   }
@@ -208,6 +215,10 @@ export class AgentLink {
       readyOnDesk: this.ready === true,
       waiting: this.peekCount()
     };
+  }
+
+  recentDrafts(sinceMs = 0) {
+    return this.drafts.filter((d) => d.answeredAt > sinceMs);
   }
 
   close() {

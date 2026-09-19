@@ -159,7 +159,8 @@ const httpServer = http.createServer(async (req, res) => {
         api: API_URL,
         seats: registry.size,
         auth: "bearer",
-        tools: ["desk_status", "next_task", "submit_draft"]
+        tools: ["desk_status", "next_task", "submit_draft"],
+        readback: `${PUBLIC_BASE}/drafts`
       });
     }
 
@@ -170,6 +171,16 @@ const httpServer = http.createServer(async (req, res) => {
         bearer_methods_supported: ["header"],
         resource_documentation: "https://github.com/PerkOS-xyz/PerkOS-Grok-Plugin"
       });
+    }
+
+    // Floor reads back what the guest answered after the turn had moved on.
+    // Same credential as the tools, so no new surface to protect.
+    if (req.method === "GET" && path === "/drafts") {
+      const who = identity(req);
+      if (!who.ok) return unauthorized(res, who.reason);
+      const link = registry.get({ agentName: who.agentName, agentId: who.agentId, relayKey: who.key });
+      const since = Number(url.searchParams.get("since") || 0);
+      return json(res, 200, { agent: who.agentName, drafts: link.recentDrafts(Number.isFinite(since) ? since : 0), status: link.status() });
     }
 
     if (path !== "/mcp" && path !== "/mcp/" && path !== "/") return json(res, 404, { error: "not_found", path });
