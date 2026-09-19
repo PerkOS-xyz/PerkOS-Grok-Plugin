@@ -270,6 +270,13 @@ export class LinkRegistry {
     setInterval(() => this.evictIdle(), 5 * 60_000).unref?.();
   }
 
+  /** Read-only: never brings a seat to life. A status page asking who is there
+   *  must not be what makes the desk believe a bot arrived. */
+  peek(agentName) {
+    const link = this.links.get(agentName);
+    return link && !link.closed ? link : null;
+  }
+
   get({ agentName, agentId, relayKey }) {
     const existing = this.links.get(agentName);
     if (existing && existing.relayKey === relayKey && !existing.closed) {
