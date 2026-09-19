@@ -196,16 +196,26 @@ const httpServer = http.createServer(async (req, res) => {
     if (req.method === "GET" && path === "/identity") {
       const who = identity(req);
       if (!who.ok) return unauthorized(res, who.reason);
-      const link = registry.get({ agentName: who.agentName, agentId: who.agentId, relayKey: who.key });
-      return json(res, 200, { agent: who.agentName, runtime: "grok-bot", displayName: link.displayName(), identity: link.identity, status: link.status() });
+      const link = registry.peek(who.agentName);
+      return json(res, 200, {
+        agent: who.agentName,
+        runtime: "grok-bot",
+        displayName: link ? link.displayName() : who.agentName,
+        identity: link ? link.identity : null,
+        status: link ? link.status() : { agent: who.agentName, connected: false, readyOnDesk: false, waiting: 0 }
+      });
     }
 
     if (req.method === "GET" && path === "/drafts") {
       const who = identity(req);
       if (!who.ok) return unauthorized(res, who.reason);
-      const link = registry.get({ agentName: who.agentName, agentId: who.agentId, relayKey: who.key });
+      const link = registry.peek(who.agentName);
       const since = Number(url.searchParams.get("since") || 0);
-      return json(res, 200, { agent: who.agentName, drafts: link.recentDrafts(Number.isFinite(since) ? since : 0), status: link.status() });
+      return json(res, 200, {
+        agent: who.agentName,
+        drafts: link ? link.recentDrafts(Number.isFinite(since) ? since : 0) : [],
+        status: link ? link.status() : { agent: who.agentName, connected: false, readyOnDesk: false, waiting: 0 }
+      });
     }
 
     if (path !== "/mcp" && path !== "/mcp/" && path !== "/") return json(res, 404, { error: "not_found", path });
@@ -216,6 +226,7 @@ const httpServer = http.createServer(async (req, res) => {
     // The relay is the real authority on the credential: a wrong key fails the
     // register and the seat never goes live, which the tools report honestly.
     const link = registry.get({ agentName: who.agentName, agentId: who.agentId, relayKey: who.key });
+    console.log(`[perkos-guest-mcp] mcp call from ${who.agentName}`);
 
     const mcp = server(link);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
