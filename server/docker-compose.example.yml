@@ -11,8 +11,13 @@ services:
       PUBLIC_BASE: https://api.perkos.xyz/guest-mcp
       PERKOS_API_URL: https://api.perkos.xyz
       PERKOS_RELAY_URL: wss://transport.perkos.xyz/a2a
+    volumes:
+      - guest-state:/app/data
     networks:
       - shared
+
+volumes:
+  guest-state:
 
 networks:
   shared:

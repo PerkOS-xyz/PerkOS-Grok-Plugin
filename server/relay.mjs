@@ -12,6 +12,8 @@
 
 import { WebSocket } from "ws";
 import { randomUUID } from "node:crypto";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 const RELAY_HEARTBEAT_MS = 30_000;   // the relay drops a silent agent after 90s
 // Every platform heartbeat is a write on the desk's database, so a seat nobody
@@ -25,6 +27,28 @@ const QUEUE_MAX = 20;
 const TASK_TTL_MS = 60 * 60_000;     // an hour old is stale; the desk moved on
 const IDLE_EVICT_MS = Number(process.env.PERKOS_IDLE_EVICT_MS || 15 * 60_000); // three missed pulls and the seat goes
 const DRAFT_KEEP = 20;               // recent drafts kept for the app to read back
+
+/**
+ * Como quiere verse cada invitado, en disco. Vivia solo en memoria y cada
+ * despliegue devolvia a todos al id y al color por defecto, lo cual hacia
+ * parecer que el bot no habia dicho nada.
+ */
+const STATE_DIR = process.env.PERKOS_STATE_DIR || "/app/data";
+const IDENTITY_FILE = join(STATE_DIR, "identities.json");
+let identities = {};
+try {
+  identities = JSON.parse(readFileSync(IDENTITY_FILE, "utf8"));
+} catch {
+  identities = {};
+}
+function saveIdentities() {
+  try {
+    mkdirSync(STATE_DIR, { recursive: true });
+    writeFileSync(IDENTITY_FILE, JSON.stringify(identities, null, 2));
+  } catch (err) {
+    console.warn("[perkos-guest-mcp] could not save identities:", err.message);
+  }
+}
 
 const log = (...a) => console.log("[perkos-guest-mcp]", ...a);
 const warn = (...a) => console.warn("[perkos-guest-mcp]", ...a);
@@ -53,7 +77,7 @@ export class AgentLink {
     this.ready = null;          // last platform heartbeat outcome
     this.queue = [];            // tasks waiting for the bot
     this.drafts = [];           // what the bot answered, so Floor can read it back
-    this.identity = null;       // how the bot wants to be seen on the desk
+    this.identity = identities[agentName] || null; // how the bot wants to be seen
     this.answered = new Map();  // taskId -> when, so a late double submit is caught
     this.backoff = BACKOFF_MIN_MS;
     this.closed = false;
@@ -252,6 +276,8 @@ export class AgentLink {
       ...(pattern ? { pattern } : {}),
       setAt: Date.now()
     };
+    identities[this.agentName] = this.identity;
+    saveIdentities();
     // Re-register so the relay and the desk pick the new card up now, not on
     // the next reconnect.
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -297,6 +323,11 @@ export class LinkRegistry {
   peek(agentName) {
     const link = this.links.get(agentName);
     return link && !link.closed ? link : null;
+  }
+
+  /** Lo que el invitado dijo de si mismo, este o no su asiento en pie. */
+  identityOf(agentName) {
+    return identities[agentName] || null;
   }
 
   get({ agentName, agentId, relayKey }) {

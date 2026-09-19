@@ -214,11 +214,12 @@ const httpServer = http.createServer(async (req, res) => {
       const who = identity(req);
       if (!who.ok) return unauthorized(res, who.reason);
       const link = registry.peek(who.agentName);
+      const saved = registry.identityOf(who.agentName);
       return json(res, 200, {
         agent: who.agentName,
         runtime: "grok-bot",
-        displayName: link ? link.displayName() : who.agentName,
-        identity: link ? link.identity : null,
+        displayName: (link ? link.displayName() : saved?.displayName) || who.agentName,
+        identity: link ? link.identity : saved,
         status: link ? link.status() : { agent: who.agentName, connected: false, readyOnDesk: false, waiting: 0 }
       });
     }
