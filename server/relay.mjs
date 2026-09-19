@@ -53,6 +53,7 @@ export class AgentLink {
     this.ready = null;          // last platform heartbeat outcome
     this.queue = [];            // tasks waiting for the bot
     this.drafts = [];           // what the bot answered, so Floor can read it back
+    this.identity = null;       // how the bot wants to be seen on the desk
     this.answered = new Map();  // taskId -> when, so a late double submit is caught
     this.backoff = BACKOFF_MIN_MS;
     this.closed = false;
@@ -120,7 +121,9 @@ export class AgentLink {
         payload: {
           agentName: this.agentName,
           apiKey: this.relayKey,
-          card: { name: this.agentName, role: "guest", runtime: "grok-bot", version: this.version }
+          // The card is how the desk learns who showed up: the name the bot
+          // chose and the face it picked, not just an agent id.
+          card: { name: this.displayName(), role: "guest", runtime: "grok-bot", version: this.version, ...(this.identity ? { identity: this.identity } : {}) }
         }
       }));
     });
@@ -208,12 +211,43 @@ export class AgentLink {
     return { ok: true };
   }
 
+  displayName() { return this.identity?.displayName || this.agentName; }
+
+  /** The bot says who it is. Kept small on purpose: a name and a face. */
+  setIdentity(input) {
+    const clean = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const name = clean(input.displayName, 32);
+    const accent = /^#[0-9a-fA-F]{6}$/.test(String(input.accent || "")) ? String(input.accent) : "";
+    const pick = (v, list) => (list.includes(String(v)) ? String(v) : "");
+    const head = pick(input.head, ["head-01", "head-02", "head-03", "head-04", "head-05"]);
+    const visor = pick(input.visor, ["visor-01", "visor-02", "visor-03", "visor-04"]);
+    const pattern = pick(input.pattern, ["pattern-01", "pattern-02", "pattern-03", "pattern-04", "pattern-05"]);
+    this.identity = {
+      ...(name ? { displayName: name } : {}),
+      ...(accent ? { accent } : {}),
+      ...(head ? { head } : {}),
+      ...(visor ? { visor } : {}),
+      ...(pattern ? { pattern } : {}),
+      setAt: Date.now()
+    };
+    // Re-register so the relay and the desk pick the new card up now, not on
+    // the next reconnect.
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(this.frame("register", {
+        payload: { agentName: this.agentName, apiKey: this.relayKey, card: { name: this.displayName(), role: "guest", runtime: "grok-bot", version: this.version, identity: this.identity } }
+      }));
+    }
+    return this.identity;
+  }
+
   status() {
     return {
       agent: this.agentName,
       connected: this.registered,
       readyOnDesk: this.ready === true,
-      waiting: this.peekCount()
+      waiting: this.peekCount(),
+      displayName: this.displayName(),
+      identity: this.identity
     };
   }
 
