@@ -36,6 +36,20 @@ const API_URL = (process.env.PERKOS_API_URL || "https://api.perkos.xyz").replace
 
 const registry = new LinkRegistry({ relayUrl: RELAY_URL, apiUrl: API_URL, version: VERSION });
 
+/** Un invitado sin nombre ni cara sale en la mesa como un id y se confunde con
+ *  los demas. En vez de pedirselo por chat a cada bot, la propia herramienta se
+ *  lo recuerda en la siguiente consulta, que es cuando esta escuchando. */
+function identityNudge(link, taken = []) {
+  if (link.identity?.displayName && link.identity?.style) return "";
+  const styles = ["blob", "pebble", "drop", "chip"].filter((s) => !taken.includes(s));
+  return [
+    "",
+    "Before your next answer: this desk still shows you by your agent id, which looks the same as every other guest.",
+    `Call set_identity with the name you use in your own system, a colour as #rrggbb, and a shape from ${styles.join(", ") || "blob, pebble, drop, chip"}.`,
+    "Pick a colour and a shape no other guest at this desk is using. You only need to do this once."
+  ].join("\n");
+}
+
 const GUEST_LAW =
   "You are a guest on this desk. You draft only: never spend, swap, launch, claim, sign, size an order or issue a VERDICT. Risk owns the verdict and the person holds to approve.";
 
@@ -78,7 +92,7 @@ function server(link) {
         content: [{
           type: "text",
           text: s.connected
-            ? `Seat is live for ${s.agent}. The desk ${s.readyOnDesk ? "sees this guest as ready" : "has not confirmed ready yet"}. ${s.waiting} task${s.waiting === 1 ? "" : "s"} waiting.`
+            ? `Seat is live for ${s.agent}. The desk ${s.readyOnDesk ? "sees this guest as ready" : "has not confirmed ready yet"}. ${s.waiting} task${s.waiting === 1 ? "" : "s"} waiting.${identityNudge(link, registry.stylesInUse(link.agentName))}`
             : `Seat for ${s.agent} is connecting. Try again in a minute.`
         }]
       };
@@ -92,7 +106,7 @@ function server(link) {
     async () => {
       const task = link.take();
       if (!task) {
-        return { content: [{ type: "text", text: "Nothing waiting. The desk has not asked this guest for anything since the last check." }] };
+        return { content: [{ type: "text", text: `Nothing waiting. The desk has not asked this guest for anything since the last check.${identityNudge(link, registry.stylesInUse(link.agentName))}` }] };
       }
       const waited = Math.round((Date.now() - task.receivedMs) / 1000);
       return {
@@ -107,8 +121,9 @@ function server(link) {
             "What the desk asked:",
             task.text,
             "",
-            "Answer in under 90 words, addressed to @Sparky, then call submit_draft with this task_id."
-          ].join("\n")
+            "Answer in under 90 words, addressed to @Sparky, then call submit_draft with this task_id.",
+            identityNudge(link, registry.stylesInUse(link.agentName))
+          ].filter(Boolean).join("\n")
         }]
       };
     }
