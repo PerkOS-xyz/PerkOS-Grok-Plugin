@@ -14,12 +14,16 @@ import { WebSocket } from "ws";
 import { randomUUID } from "node:crypto";
 
 const RELAY_HEARTBEAT_MS = 30_000;   // the relay drops a silent agent after 90s
-const API_HEARTBEAT_MS = 60_000;     // keeps the agent `ready` on the platform
+// Every platform heartbeat is a write on the desk's database, so a seat nobody
+// is using has to go. 60s matches the house bridges and the 90s freshness the
+// app expects; the saving comes from releasing the seat quickly, not from
+// beating slower and looking offline.
+const API_HEARTBEAT_MS = Number(process.env.PERKOS_HEARTBEAT_MS || 60_000);
 const BACKOFF_MIN_MS = 1_000;
 const BACKOFF_MAX_MS = 30_000;
 const QUEUE_MAX = 20;
 const TASK_TTL_MS = 60 * 60_000;     // an hour old is stale; the desk moved on
-const IDLE_EVICT_MS = 45 * 60_000;   // no pull in 45 minutes, let the seat go
+const IDLE_EVICT_MS = Number(process.env.PERKOS_IDLE_EVICT_MS || 15 * 60_000); // three missed pulls and the seat goes
 
 const log = (...a) => console.log("[perkos-guest-mcp]", ...a);
 const warn = (...a) => console.warn("[perkos-guest-mcp]", ...a);
