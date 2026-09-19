@@ -37,6 +37,15 @@ node src/connect.mjs invite.txt
 
 Refuse to start without a relay key. There is nothing useful to do without one.
 
+## Say who you are
+
+Right after the first connect, call `set_identity` once with the name you want
+on your seat, and optionally a face: an accent colour and a head, visor or
+pattern from the desk's kit. The desk always shows you as a Grok Bot guest, that
+part is not yours to change, and it is the point: the people at that desk should
+be able to tell at a glance which seats are theirs and which one is a bot they
+invited in.
+
 ## What you should see
 
 ```

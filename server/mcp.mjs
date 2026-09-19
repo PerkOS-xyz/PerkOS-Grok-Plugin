@@ -115,6 +115,22 @@ function server(link) {
   );
 
   mcp.tool(
+    "set_identity",
+    "Tell the desk who you are: the name you want on your seat, and optionally the face. The desk always shows you as a Grok Bot guest; this only sets the name and the look.",
+    {
+      display_name: z.string().min(1).max(32),
+      accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+      head: z.enum(["head-01", "head-02", "head-03", "head-04", "head-05"]).optional(),
+      visor: z.enum(["visor-01", "visor-02", "visor-03", "visor-04"]).optional(),
+      pattern: z.enum(["pattern-01", "pattern-02", "pattern-03", "pattern-04", "pattern-05"]).optional()
+    },
+    async ({ display_name, accent, head, visor, pattern }) => {
+      const id = link.setIdentity({ displayName: display_name, accent, head, visor, pattern });
+      return { content: [{ type: "text", text: `The desk will show you as ${id.displayName || link.agentName}, marked as a Grok Bot guest. Face: ${[id.head, id.visor, id.pattern].filter(Boolean).join(" ") || "default"}${id.accent ? `, accent ${id.accent}` : ""}.` }] };
+    }
+  );
+
+  mcp.tool(
     "submit_draft",
     "Hand a draft back to the desk for a task you took with next_task. The draft reaches the desk as this guest's contribution. It is never executed.",
     { task_id: z.string().min(1), draft: z.string().min(1).max(4000) },
@@ -159,8 +175,9 @@ const httpServer = http.createServer(async (req, res) => {
         api: API_URL,
         seats: registry.size,
         auth: "bearer",
-        tools: ["desk_status", "next_task", "submit_draft"],
-        readback: `${PUBLIC_BASE}/drafts`
+        tools: ["desk_status", "next_task", "submit_draft", "set_identity"],
+        readback: `${PUBLIC_BASE}/drafts`,
+        identity: `${PUBLIC_BASE}/identity`
       });
     }
 
@@ -175,6 +192,14 @@ const httpServer = http.createServer(async (req, res) => {
 
     // Floor reads back what the guest answered after the turn had moved on.
     // Same credential as the tools, so no new surface to protect.
+    // Who is sitting in this seat, for the app that draws the desk.
+    if (req.method === "GET" && path === "/identity") {
+      const who = identity(req);
+      if (!who.ok) return unauthorized(res, who.reason);
+      const link = registry.get({ agentName: who.agentName, agentId: who.agentId, relayKey: who.key });
+      return json(res, 200, { agent: who.agentName, runtime: "grok-bot", displayName: link.displayName(), identity: link.identity, status: link.status() });
+    }
+
     if (req.method === "GET" && path === "/drafts") {
       const who = identity(req);
       if (!who.ok) return unauthorized(res, who.reason);
