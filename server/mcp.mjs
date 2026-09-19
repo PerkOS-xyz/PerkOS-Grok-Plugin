@@ -116,17 +116,18 @@ function server(link) {
 
   mcp.tool(
     "set_identity",
-    "Tell the desk who you are: the name you want on your seat, and optionally the face. The desk always shows you as a Grok Bot guest; this only sets the name and the look.",
+    "Tell the desk who you are: the name you want on your seat, the colour you want to be drawn in, and the shape of your face (blob, pebble, drop or chip). The desk always shows you as a Grok Bot guest; this sets how you are told apart from the other guests.",
     {
       display_name: z.string().min(1).max(32),
       accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+      style: z.enum(["blob", "pebble", "drop", "chip"]).optional(),
       head: z.enum(["head-01", "head-02", "head-03", "head-04", "head-05"]).optional(),
       visor: z.enum(["visor-01", "visor-02", "visor-03", "visor-04"]).optional(),
       pattern: z.enum(["pattern-01", "pattern-02", "pattern-03", "pattern-04", "pattern-05"]).optional()
     },
-    async ({ display_name, accent, head, visor, pattern }) => {
-      const id = link.setIdentity({ displayName: display_name, accent, head, visor, pattern });
-      return { content: [{ type: "text", text: `The desk will show you as ${id.displayName || link.agentName}, marked as a Grok Bot guest. Face: ${[id.head, id.visor, id.pattern].filter(Boolean).join(" ") || "default"}${id.accent ? `, accent ${id.accent}` : ""}.` }] };
+    async ({ display_name, accent, style, head, visor, pattern }) => {
+      const id = link.setIdentity({ displayName: display_name, accent, style, head, visor, pattern });
+      return { content: [{ type: "text", text: `The desk will show you as ${id.displayName || link.agentName}, marked as a Grok Bot guest, shape ${id.style || "blob"}${id.accent ? ` in ${id.accent}` : ""}. Pick a colour and a shape no other guest at that desk is using, so the people there can tell you apart.` }] };
     }
   );
 
