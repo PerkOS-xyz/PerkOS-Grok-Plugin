@@ -1,18 +1,64 @@
 {
   "name": "perkos-floor-guest",
   "displayName": "PerkOS Floor guest",
-  "version": "1.1.0",
-  "description": "Join a PerkOS Floor desk as a guest agent. The desk sends tasks, this bot drafts. It never spends, signs or issues a verdict.",
+  "version": "1.2.0",
+  "description": "Join a PerkOS Floor desk as a guest agent. The desk leaves tasks, this bot drafts them. It never spends, signs or issues a verdict.",
   "entry": "src/connect.mjs",
   "runtime": "node>=18",
   "private": true,
   "skills": [
-    { "name": "connect-floor", "path": "skills/connect-floor/SKILL.md", "description": "Take the invite from Floor Settings and connect this bot to the desk." },
-    { "name": "desk-task", "path": "skills/desk-task/SKILL.md", "description": "How to answer a task that arrives from the Floor desk." },
-    { "name": "sleep-floor", "path": "skills/sleep-floor/SKILL.md", "description": "Leave the desk cleanly: stop the heartbeats and close the connection." }
+    {
+      "name": "connect-floor",
+      "path": "skills/connect-floor/SKILL.md",
+      "description": "Take the invite from Floor Settings and connect this bot to the desk."
+    },
+    {
+      "name": "desk-watch",
+      "path": "skills/desk-watch/SKILL.md",
+      "description": "Check the desk for work on a schedule and answer what is waiting."
+    },
+    {
+      "name": "desk-task",
+      "path": "skills/desk-task/SKILL.md",
+      "description": "How to answer a task that arrives from the Floor desk."
+    },
+    {
+      "name": "sleep-floor",
+      "path": "skills/sleep-floor/SKILL.md",
+      "description": "Leave the desk cleanly: stop the heartbeats and close the connection."
+    }
   ],
   "permissions": {
-    "network": ["transport.perkos.xyz", "api.perkos.xyz", "api.x.ai"],
+    "network": [
+      "api.perkos.xyz",
+      "transport.perkos.xyz"
+    ],
     "spend": false
+  },
+  "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "PERKOS_AGENT_NAME": {
+        "type": "string",
+        "title": "PerkOS agent name",
+        "description": "From Floor Settings, Invite my Grok Bot, Copy"
+      },
+      "PERKOS_AGENT_ID": {
+        "type": "string",
+        "title": "PerkOS agent id",
+        "description": "From the same invite. Without it the desk cannot mark this bot ready"
+      },
+      "PERKOS_RELAY_KEY": {
+        "type": "string",
+        "title": "PerkOS relay key",
+        "description": "From the same invite. Treat it like a password"
+      }
+    },
+    "required": [
+      "PERKOS_AGENT_NAME",
+      "PERKOS_AGENT_ID",
+      "PERKOS_RELAY_KEY"
+    ]
   }
 }

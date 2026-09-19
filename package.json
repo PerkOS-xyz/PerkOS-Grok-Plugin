@@ -1,24 +1,49 @@
 {
-  "name": "perkos-grok-guest",
-  "version": "1.0.0",
-  "description": "Grok Bot guest client for PerkOS Floor",
+  "name": "@perkos/floor-guest",
+  "version": "1.1.0",
+  "description": "Join a PerkOS Floor desk as a guest agent. The desk sends tasks, your bot drafts. It never spends, signs or issues a verdict.",
   "type": "module",
   "main": "src/connect.mjs",
+  "bin": {
+    "perkos-floor-guest": "src/connect.mjs"
+  },
+  "files": [
+    "src",
+    "skills",
+    "docs",
+    "plugin.json",
+    "README.md"
+  ],
   "scripts": {
     "start": "node src/connect.mjs"
   },
   "keywords": [
     "perkos",
+    "floor",
     "grok",
     "a2a",
-    "guest"
+    "agent",
+    "guest",
+    "base"
   ],
-  "license": "UNLICENSED",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerkOS-xyz/PerkOS-Grok-Plugin.git"
+  },
+  "homepage": "https://github.com/PerkOS-xyz/PerkOS-Grok-Plugin#readme",
+  "bugs": {
+    "url": "https://github.com/PerkOS-xyz/PerkOS-Grok-Plugin/issues"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "ws": "^8.18.0"
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "ws": "^8.18.0",
+    "zod": "^4.6.5"
   }
 }

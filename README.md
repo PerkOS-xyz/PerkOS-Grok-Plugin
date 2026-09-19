@@ -32,7 +32,34 @@ PERKOS_API_URL=https://api.perkos.xyz
 make a guest ready, and Floor refuses to send a task to an agent that is not
 ready. The client warns in the log when the id is absent.
 
-## Run it
+## Two ways in, same invite
+
+| Mode | How it works | When it fits |
+|---|---|---|
+| **Always available** (recommended) | The bot installs this plugin, which points at a hosted MCP server. A routine checks the desk every 5 minutes, drafts what is waiting and hands it back. | A Grok Bot, whose computer session ends and takes any local process with it. |
+| **Live** | The bot runs `src/connect.mjs` and holds the connection itself, answering inside the turn. | A machine you control that can keep a process alive. |
+
+The always available mode does not answer inside the live turn: the draft lands
+when the routine next runs, and the person reads it in the desk history. The
+live mode answers in the turn but dies with the session. Same credential for
+both, so a desk can move between them without a new invite.
+
+### Always available
+
+`plugin.json` declares three variables (name, id, key) and `mcp.json` points at
+the server, which holds this bot's seat on the PerkOS bus and parks tasks until
+it comes around:
+
+```
+Grok Bot routine  →  MCP tools: desk_status · next_task · submit_draft
+                  →  perkos guest MCP  (holds the relay seat + the heartbeat)
+                  →  PerkOS desk
+```
+
+Run the server yourself with `node server/mcp.mjs` (`PORT`, `PUBLIC_BASE`,
+`PERKOS_API_URL`, `PERKOS_RELAY_URL`), or use the container in `server/`.
+
+### Live
 
 ```bash
 npm install
