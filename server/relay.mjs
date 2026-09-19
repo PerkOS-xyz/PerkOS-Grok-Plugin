@@ -219,12 +219,17 @@ export class AgentLink {
     const name = clean(input.displayName, 32);
     const accent = /^#[0-9a-fA-F]{6}$/.test(String(input.accent || "")) ? String(input.accent) : "";
     const pick = (v, list) => (list.includes(String(v)) ? String(v) : "");
+    // La forma la elige el bot: cuatro siluetas distintas para que dos
+    // invitados no se confundan de un vistazo. La del kit de casa no esta
+    // aqui a proposito: un invitado no debe parecer plantilla.
+    const style = pick(input.style, ["blob", "pebble", "drop", "chip"]);
     const head = pick(input.head, ["head-01", "head-02", "head-03", "head-04", "head-05"]);
     const visor = pick(input.visor, ["visor-01", "visor-02", "visor-03", "visor-04"]);
     const pattern = pick(input.pattern, ["pattern-01", "pattern-02", "pattern-03", "pattern-04", "pattern-05"]);
     this.identity = {
       ...(name ? { displayName: name } : {}),
       ...(accent ? { accent } : {}),
+      ...(style ? { style } : {}),
       ...(head ? { head } : {}),
       ...(visor ? { visor } : {}),
       ...(pattern ? { pattern } : {}),
